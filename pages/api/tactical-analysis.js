@@ -1,16 +1,30 @@
 export default async function handler(req, res) {
   const { text } = JSON.parse(req.body);
 
-  // Simulación de análisis táctico estilo PRO (después conectamos IA real)
-  let analysis = "";
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: "Sos un analista táctico profesional de futsal. Analizás como un entrenador experto, con lenguaje claro, conceptos tácticos y observaciones específicas (presión, coberturas, superioridades, transiciones, etc).",
+        },
+        {
+          role: "user",
+          content: text,
+        },
+      ],
+    }),
+  });
 
-  if (text.toLowerCase().includes("arquero jugador")) {
-    analysis = "Detecto uso de arquero jugador. Posible superioridad numérica en primera línea. Revisar ocupación del segundo palo y tiempos de circulación.";
-  } else if (text.toLowerCase().includes("presion")) {
-    analysis = "El equipo aplica presión alta. Evaluar coordinación en coberturas y riesgo en espalda de última línea.";
-  } else {
-    analysis = "Análisis general: revisar organización ofensiva, transiciones y eficacia en finalización.";
-  }
+  const data = await response.json();
 
-  res.status(200).json({ result: analysis });
+  res.status(200).json({
+    result: data.choices[0].message.content,
+  });
 }
